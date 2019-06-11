@@ -55,7 +55,7 @@ public class Datenbank {
 				connection.close();
 			}
 		} catch (SQLException e) {
-			System.out.println("Fehler beim Schließen der Datenbankverbindung.");
+			System.out.println("Fehler beim SchlieÃŸen der Datenbankverbindung.");
 		}
 	}
 
@@ -104,7 +104,7 @@ public class Datenbank {
 	// }
 
 	/**
-	 * @deprecated nicht mehr ben�tigt, da Kunde in Datenbank.getFARechnerInfo
+	 * @deprecated nicht mehr benötigt, da Kunde in Datenbank.getFARechnerInfo
 	 *             geladen
 	 */
 	public String getKunde(int serienNummer) throws SQLException {
@@ -121,7 +121,7 @@ public class Datenbank {
 		return kunde;
 	}
 
-	/** holt info f�r FA_Rechner nach Seriennummer 
+	/** holt info für FA_Rechner nach Seriennummer 
 	 * @throws SQLException*/
 	public FA_Rechner getFARechnerInfo(int pSeriennr) throws SQLException {
 
@@ -159,7 +159,7 @@ public class Datenbank {
 			int pAuftragsNr = rsInfo.getInt("Rechner.Auftrag_idAuftragsnummer");
 			int pKundenId = rsInfo.getInt("Auftrag.Kunde_idKunde");
 			String pStatus = rsInfo.getString("Status.Bezeichnung");
-			// Lieferzeit zu Lieferdatum in Datenbank ändern
+			// Lieferzeit zu Lieferdatum in Datenbank Ã¤ndern
 			Date pLieferdatum = rsInfo.getDate("Auftragsverteilung.Datum");
 			Date pBearbeitungsdatum = rsInfo.getDate("Auftragsverteilung.Datum");
 			String pFirmenname = null;
@@ -217,10 +217,10 @@ public class Datenbank {
 	}
 
 	/**
-	 * Fr�gt ET Lagerbestand ab. Ben�tigt f�r ET Suche bei SA_Rechner
+	 * Frägt ET Lagerbestand ab. Benötigt für ET Suche bei SA_Rechner
 	 */
 	public int getEinzelteilLagerbestand(String eingabe) throws SQLException {
-		// in der ET Suche in SA_REchner wurde die Eingabe schon �berpr�ft
+		// in der ET Suche in SA_REchner wurde die Eingabe schon überprüft
 		Statement stmt = connection.createStatement();
 		String query = "SELECT Lagerbestand FROM Rechner_Teile WHERE Bezeichnung = '" + eingabe + "'";
 		ResultSet rs = stmt.executeQuery(query);
@@ -232,4 +232,66 @@ public class Datenbank {
 		return lagerbestand;
 	}
 
+	/**
+	 * Diese Methode listet die Bezeichnung der Teile eines Rechners auf.
+	 * 
+	 * @param pSeriennummer Die Seriennummer des Rechners, dessen Teile aufgelistet
+	 *                      werden sollen
+	 * @throws SQLException
+	 */
+
+	public void listTeileAuftrag(int pSeriennummer) throws SQLException {
+		Statement stmt = connection.createStatement();
+		ResultSet rs = stmt.executeQuery(
+				"SELECT Bezeichnung FROM RechnerTeile, Teile, Rechner WHERE Rechner.idSeriennummer=RechnerTeile.Rechner_idSeriennummer AND RechnerTeile.Teile_idTeilenummer=Teile.idTeilenummer AND idSeriennummer=pSeriennummer");
+		while (rs.next()) {
+			System.out.println("Teil: " + rs.toString("Bezeichnung"));
+//			Wird durch andere Ausgabe ersetzt wenn Frontend steht.
+
+		}
+	}
+
+	/**
+	 * Diese Methode prüft ob alle Teile des Rechners im Lager sind
+	 * (Serviceauftrag).
+	 * 
+	 * @param pSeriennummer Die Seriennummer des Rechners, dessen Lagerbestand
+	 *                      aufgerufen werden soll.
+	 * @throws SQLException
+	 */
+
+	public void lagerbestandPruefen(int pSeriennummer) throws SQLException {
+		Statement stmt = connection.createStatement();
+		ResultSet rs = stmt.executeQuery(
+				"SELECT Lagerbestand FROM RechnerTeile, Teile, Rechner WHERE Rechner.idSeriennummer=RechnerTeile.Rechner_idSeriennummer AND RechnerTeile.Teile_idTeilenummer=Teile.idTeilenummer AND idSeriennummer=pSeriennummer");
+		int teilenichtvorhanden = 0;
+		while (rs.next()) {
+			if (Lagerbestand == 0) {
+				System.out.println("Teil nicht vorhanden");
+				teilenichtvorhanden++;
+			} else {
+				System.out.println("Lagerbestand: " + rs.toString("Lagerbestand"));
+			}
+		}
+		if (teilenichtvorhanden > 0) {
+			System.out.println("Es sind nicht alle Teile vorhanden. Auftrag wird an den Einkauf geschickt");
+			ResultSet rs2 = stmt
+					.executeQuery("UPDATE Rechner SET Status_idStatus = '7' WHERE idSeriennummer = pSeriennummer");
+		}
+	}
+
+	public void Rechnerzuteilung() {
+		Statement stmt = connection.createStatement();
+		ResultSet rs = stmt.executeQuery("SELECT idSeriennummer FROM Rechner");
+		while (rs.next()) {
+			ResultSet rs2 = stmt.executeQuery("SELECT Status_idStatus FROM Rechner WHERE idSeriennummer");
+			if (Status_idStatus) {
+
+			} else {
+
+			}
+		}
+	}
+
 }
+
